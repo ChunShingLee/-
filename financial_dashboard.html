@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>财务仪表盘 - 智能家庭财务规划系统</title>
+    <script src="https://gw.alipayobjects.com/os/lib/antv/g2/4.2.10/dist/g2.min.js"></script>
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.data-set-0.11.8/dist/data-set.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #34a853;
+            --warning-color: #fbbc05;
+            --danger-color: #ea4335;
+            --info-color: #46bdc6;
+            --dark-color: #202124;
+            --light-color: #f8f9fa;
+            --border-color: #dadce0;
+            --shadow-color: rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            padding: 20px;
+            background-color: var(--light-color);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            color: var(--dark-color);
+            font-weight: 500;
+        }
+
+        .card-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .chart-container {
+            height: 280px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--light-color);
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .progress-value {
+            height: 100%;
+            background: var(--primary-color);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-grid">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">月度收支概览</h2>
+            </div>
+            <div id="income-expense-chart" class="chart-container"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">预算执行情况</h2>
+            </div>
+            <div class="card-value">75%</div>
+            <div class="progress-bar">
+                <div class="progress-value" style="width: 75%"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">资产配置</h2>
+            </div>
+            <div id="asset-allocation-chart" class="chart-container"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">支出分类</h2>
+            </div>
+            <div id="expense-category-chart" class="chart-container"></div>
+        </div>
+    </div>
+
+    <script>
+        // 从localStorage获取数据
+        const budgetData = JSON.parse(localStorage.getItem('budgetData') || '[]');
+
+        // 初始化图表
+        function initCharts() {
+            // 收支概览图表
+            const incomeExpenseChart = new G2.Chart({
+                container: 'income-expense-chart',
+                autoFit: true,
+                height: 200,
+            });
+
+            incomeExpenseChart.data([
+                { month: '1月', type: '收入', value: 12000 },
+                { month: '1月', type: '支出', value: 8000 },
+                { month: '2月', type: '收入', value: 13000 },
+                { month: '2月', type: '支出', value: 9000 },
+                { month: '3月', type: '收入', value: 11000 },
+                { month: '3月', type: '支出', value: 7500 },
+            ]);
+
+            incomeExpenseChart.scale('value', {
+                nice: true,
+            });
+
+            incomeExpenseChart
+                .interval()
+                .position('month*value')
+                .color('type')
+                .adjust('dodge');
+
+            incomeExpenseChart.render();
+
+            // 资产配置图表
+            const assetAllocationChart = new G2.Chart({
+                container: 'asset-allocation-chart',
+                autoFit: true,
+                height: 200,
+            });
+
+            assetAllocationChart.data([
+                { type: '现金', value: 30 },
+                { type: '股票', value: 25 },
+                { type: '基金', value: 20 },
+                { type: '房产', value: 15 },
+                { type: '其他', value: 10 },
+            ]);
+
+            assetAllocationChart.coordinate('theta', {
+                radius: 0.75,
+                innerRadius: 0.2
+            });
+
+            assetAllocationChart
+                .interval()
+                .position('value')
+                .color('type')
+                .adjust('stack');
+
+            assetAllocationChart.render();
+
+            // 支出分类图表
+            const expenseCategoryChart = new G2.Chart({
+                container: 'expense-category-chart',
+                autoFit: true,
+                height: 200,
+            });
+
+            expenseCategoryChart.data([
+                { category: '住房', amount: 3000 },
+                { category: '饮食', amount: 2000 },
+                { category: '交通', amount: 1000 },
+                { category: '娱乐', amount: 800 },
+                { category: '其他', amount: 1200 },
+            ]);
+
+            expenseCategoryChart.coordinate('theta', {
+                radius: 0.75,
+            });
+
+            expenseCategoryChart
+                .interval()
+                .position('amount')
+                .color('category')
+                .adjust('stack');
+
+            expenseCategoryChart.render();
+        }
+
+        // 页面加载完成后初始化图表
+        window.addEventListener('load', initCharts);
+
+        // 窗口大小变化时重绘图表
+        window.addEventListener('resize', initCharts);
+    </script>
+</body>
+</html>

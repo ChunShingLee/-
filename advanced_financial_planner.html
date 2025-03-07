@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能家庭财务规划系统</title>
+    <!-- 引入图表库 -->
+    <!-- 这些脚本将通过JavaScript动态加载，以便提供备用资源 -->
+    <!-- <script src="https://gw.alipayobjects.com/os/lib/antv/g2/4.2.10/dist/g2.min.js"></script>
+    <script src="https://gw.alipayobjects.com/os/lib/antv/g6/4.8.3/dist/g6.min.js"></script>
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.data-set-0.11.8/dist/data-set.js"></script> -->
+    <!-- 引入XLSX库 -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script> -->
+    <!-- 引入Material Icons和Fonts，添加本地备用字体 -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 如果在线字体加载失败，提供备用系统字体 */
+        @font-face {
+            font-family: 'Roboto';
+            font-style: normal;
+            font-weight: 300;
+            font-display: swap;
+            src: local('Segoe UI Light'), local('Arial'), local('sans-serif-light');
+        }
+        
+        @font-face {
+            font-family: 'Roboto';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: local('Segoe UI'), local('Arial'), local('sans-serif');
+        }
+        
+        @font-face {
+            font-family: 'Roboto';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: local('Segoe UI Semibold'), local('Arial Bold'), local('sans-serif-medium');
+        }
+        
+        @font-face {
+            font-family: 'Roboto';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: local('Segoe UI Bold'), local('Arial Bold'), local('sans-serif-bold');
+        }
+        
+        /* Material Icons 系统备用样式 */
+        .material-icons {
+            font-family: 'Material Icons', 'Segoe UI Symbol', 'Arial', sans-serif;
+        }
+        
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #34a853;
+            --warning-color: #fbbc05;
+            --danger-color: #ea4335;
+            --info-color: #46bdc6;
+            --dark-color: #202124;
+            --light-color: #f8f9fa;
+            --border-color: #dadce0;
+            --shadow-color: rgba(0,0,0,0.1);
+            --success-gradient: linear-gradient(45deg, #34a853, #4285f4);
+            --warning-gradient: linear-gradient(45deg, #fbbc05, #ea4335);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: white;
+            padding: 20px;
+            box-shadow: 2px 0 4px var(--shadow-color);
+            position: fixed;
+            width: 250px;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+
+        .nav-menu {
+            list-style: none;
+            margin-top: 30px;
+        }
+
+        .nav-item {
+            margin-bottom: 10px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: var(--dark-color);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: var(--light-color);
+            color: var(--primary-color);
+        }
+
+        .nav-link.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .nav-link .material-icons {
+            margin-right: 10px;
+        }
+
+        .data-management {
+            margin-top: 30px;
+            padding: 15px;
+            background: var(--light-color);
+            border-radius: 8px;
+        }
+
+        .data-management h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: var(--dark-color);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        #content-frame {
+            width: 100%;
+            height: calc(100vh - 40px);
+            border: none;
+            border-radius: 12px;
+            background: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar">
+            <h1 style="font-size: 20px; color: var(--primary-color);">智能财务规划</h1>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a class="nav-link active" data-page="financial_dashboard.html">
+                        <span class="material-icons">dashboard</span>
+                        仪表盘
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-page="budget_management.html">
+                        <span class="material-icons">account_balance_wallet</span>
+                        预算管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-page="investment_portfolio.html">
+                        <span class="material-icons">trending_up</span>
+                        投资组合
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-page="debt_management.html">
+                        <span class="material-icons">credit_card</span>
+                        债务管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-page="education_fund.html">
+                        <span class="material-icons">school</span>
+                        教育基金
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-page="retirement_planning.html">
+                        <span class="material-icons">elderly</span>
+                        养老规划
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-page="tax_planning.html">
+                        <span class="material-icons">receipt_long</span>
+                        税务规划
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-page="insurance_planning.html">
+                        <span class="material-icons">health_and_safety</span>
+                        保险规划
+                    </a>
+                </li>
+            </ul>
+
+            <div class="data-management">
+                <h3>数据管理</h3>
+                <label for="import-excel" class="hidden">导入Excel文件</label>
+                <input type="file" id="import-excel" accept=".xlsx" class="hidden" aria-label="导入Excel文件" title="选择预算数据Excel文件">
+                <button class="btn btn-primary" onclick="document.getElementById('import-excel').click()">
+                    <span class="material-icons">upload_file</span>
+                    导入数据
+                </button>
+                <button class="btn btn-outline" onclick="exportTemplate()">
+                    <span class="material-icons">download</span>
+                    导出模板
+                </button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <iframe id="content-frame" src="financial_dashboard.html" name="content" style="width: 100%; height: calc(100vh - 40px); border: none; border-radius: 12px; background: white;" sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin allow-top-navigation" title="家庭财务规划内容" aria-label="财务规划仪表盘"></iframe>
+        </main>
+    </div>
+
+    <script>
+        // 脚本资源及备用URL
+        const scripts = [
+            { 
+                name: 'g2', 
+                primary: 'https://gw.alipayobjects.com/os/lib/antv/g2/4.2.10/dist/g2.min.js',
+                backup: 'https://cdn.jsdelivr.net/npm/@antv/g2@4.2.10/dist/g2.min.js'
+            },
+            { 
+                name: 'g6', 
+                primary: 'https://gw.alipayobjects.com/os/lib/antv/g6/4.8.3/dist/g6.min.js',
+                backup: 'https://cdn.jsdelivr.net/npm/@antv/g6@4.8.3/dist/g6.min.js'
+            },
+            { 
+                name: 'data-set', 
+                primary: 'https://gw.alipayobjects.com/os/antv/pkg/_antv.data-set-0.11.8/dist/data-set.js',
+                backup: 'https://cdn.jsdelivr.net/npm/@antv/data-set@0.11.8/dist/data-set.min.js'
+            },
+            { 
+                name: 'xlsx', 
+                primary: 'https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js',
+                backup: 'https://unpkg.com/xlsx/dist/xlsx.full.min.js'
+            }
+        ];
+
+        // 加载脚本函数，支持备用资源
+        function loadScript(scriptConfig) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = scriptConfig.primary;
+                script.async = true;
+
+                script.onload = () => {
+                    console.log(`加载成功: ${scriptConfig.name} (主资源)`);
+                    resolve();
+                };
+
+                script.onerror = () => {
+                    console.warn(`主资源加载失败: ${scriptConfig.name}，尝试备用资源`);
+                    
+                    // 尝试加载备用资源
+                    const backupScript = document.createElement('script');
+                    backupScript.src = scriptConfig.backup;
+                    backupScript.async = true;
+                    
+                    backupScript.onload = () => {
+                        console.log(`加载成功: ${scriptConfig.name} (备用资源)`);
+                        resolve();
+                    };
+                    
+                    backupScript.onerror = () => {
+                        console.error(`资源加载失败: ${scriptConfig.name}`);
+                        reject(new Error(`无法加载脚本: ${scriptConfig.name}`));
+                    };
+                    
+                    document.head.appendChild(backupScript);
+                };
+
+                document.head.appendChild(script);
+            });
+        }
+
+        // 加载所有必要的脚本
+        Promise.all(scripts.map(loadScript))
+            .then(() => {
+                console.log('所有资源加载完成');
+                // 初始化完成的其他操作...
+            })
+            .catch(error => {
+                console.error('资源加载失败:', error);
+                alert('部分资源加载失败，某些功能可能无法使用。请刷新页面重试。');
+            });
+        
+        // 预加载资源列表 - 将不再使用preload，而是直接在页面开始时预加载资源
+        const resourceUrls = [
+            "https://gw.alipayobjects.com/os/lib/antv/g2/4.2.10/dist/g2.min.js",
+            "https://gw.alipayobjects.com/os/lib/antv/g6/4.8.3/dist/g6.min.js",
+            "https://gw.alipayobjects.com/os/antv/pkg/_antv.data-set-0.11.8/dist/data-set.js"
+        ];
+        
+        // 资源预加载函数 - 改为使用prefetch而不是preload
+        function preloadResources() {
+            resourceUrls.forEach(url => {
+                const link = document.createElement('link');
+                link.rel = 'prefetch'; // 使用prefetch代替preload
+                link.href = url;
+                link.as = url.endsWith('.js') ? 'script' : 'style';
+                link.crossOrigin = 'anonymous';
+                document.head.appendChild(link);
+                
+                // 添加请求完成的处理
+                link.onload = () => console.log(`预加载资源成功: ${url}`);
+                link.onerror = () => console.warn(`预加载资源失败: ${url}`);
+            });
+        }
+        
+        // 在页面加载时预加载资源
+        window.addEventListener('DOMContentLoaded', preloadResources);
+        
+        // 页面导航
+        document.querySelectorAll('.nav-link').forEach(link => {
+            // 移除可能存在的旧事件监听器
+            link.removeEventListener('click', navigationHandler);
+            // 添加新的事件监听器
+            link.addEventListener('click', navigationHandler);
+        });
+        
+        // 导航处理函数
+        function navigationHandler(e) {
+            e.preventDefault();
+            // 更新活动状态
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+            
+            // 获取目标页面
+            const page = this.getAttribute('data-page');
+            const frame = document.getElementById('content-frame');
+            
+            // 添加加载状态提示
+            frame.style.opacity = '0.5';
+            console.log('正在加载页面:', page);
+            
+            // 添加加载指示器
+            showLoadingIndicator();
+            
+            // 清除之前可能存在的事件监听器
+            const oldOnload = frame.onload;
+            const oldOnerror = frame.onerror;
+            
+            // 设置超时检测
+            const loadTimeout = setTimeout(() => {
+                frame.style.opacity = '1';
+                console.warn('页面加载超时:', page);
+                hideLoadingIndicator();
+                
+                // 提示用户是否重试
+                if (confirm('页面加载超时，是否重试？')) {
+                    loadPage(page);
+                }
+            }, 30000);
+            
+            // 处理加载完成
+            frame.onload = function() {
+                clearTimeout(loadTimeout);
+                frame.style.opacity = '1';
+                console.log('页面加载成功:', page);
+                hideLoadingIndicator();
+                
+                // 尝试与子页面通信并注入已经加载的脚本
+                try {
+                    // 向子页面传递已加载的脚本对象
+                    frame.contentWindow.postMessage({
+                        type: 'parentScriptsLoaded',
+                        scriptObjects: {
+                            g2: window.G2,
+                            g6: window.G6,
+                            dataSet: window.DataSet,
+                            xlsx: window.XLSX
+                        }
+                    }, '*');
+                    
+                    // 监听子页面消息
+                    window.addEventListener('message', function(event) {
+                        if (event.data && event.data.type === 'childRequestsScripts') {
+                            // 子页面请求脚本对象，再次尝试发送
+                            frame.contentWindow.postMessage({
+                                type: 'parentScriptsLoaded',
+                                scriptObjects: {
+                                    g2: window.G2,
+                                    g6: window.G6,
+                                    dataSet: window.DataSet,
+                                    xlsx: window.XLSX
+                                }
+                            }, '*');
+                        }
+                    });
+                } catch (error) {
+                    console.warn('子页面通信失败:', error);
+                }
+            };
+            
+            // 处理加载错误
+            frame.onerror = function(error) {
+                clearTimeout(loadTimeout);
+                frame.style.opacity = '1';
+                console.error('页面加载错误:', page, error);
+                hideLoadingIndicator();
+                
+                if (confirm('页面加载失败，是否重试？')) {
+                    loadPage(page);
+                }
+            };
+            
+            // 加载页面
+            loadPage(page);
+        }
+        
+        // 加载页面函数
+        function loadPage(page) {
+            const frame = document.getElementById('content-frame');
+            showLoadingIndicator();
+            
+            try {
+                const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+                console.log('加载页面URL:', baseUrl + page);
+                
+                // 预加载页面资源
+                const link = document.createElement('link');
+                link.rel = 'prefetch';
+                link.href = baseUrl + page;
+                document.head.appendChild(link);
+                
+                // 稍微延迟设置src，让预加载有效果
+                setTimeout(() => {
+                    frame.src = baseUrl + page;
+                }, 100);
+            } catch (error) {
+                frame.style.opacity = '1';
+                console.error('页面加载错误:', error);
+                hideLoadingIndicator();
+                alert('页面加载出错，请重试');
+            }
+        }
+        
+        // 显示加载指示器
+        function showLoadingIndicator() {
+            let loadingIndicator = document.getElementById('loading-indicator');
+            
+            if (!loadingIndicator) {
+                loadingIndicator = document.createElement('div');
+                loadingIndicator.id = 'loading-indicator';
+                loadingIndicator.innerHTML = `
+                    <div class="spinner"></div>
+                    <div class="loading-text">正在加载，请稍候...</div>
+                `;
+                loadingIndicator.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background-color: rgba(255, 255, 255, 0.9);
+                    padding: 20px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    z-index: 9999;
+                `;
+                
+                const spinner = loadingIndicator.querySelector('.spinner');
+                spinner.style.cssText = `
+                    width: 40px;
+                    height: 40px;
+                    border: 4px solid rgba(0, 0, 0, 0.1);
+                    border-left-color: var(--primary-color);
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    margin-bottom: 15px;
+                `;
+                
+                document.body.appendChild(loadingIndicator);
+            } else {
+                loadingIndicator.style.display = 'flex';
+            }
+        }
+        
+        // 隐藏加载指示器
+        function hideLoadingIndicator() {
+            const loadingIndicator = document.getElementById('loading-indicator');
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 数据导入处理
+        document.getElementById('import-excel').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        
+                        // 解析数据
+                        const budgetSheet = workbook.Sheets['预算数据'];
+                        if (budgetSheet) {
+                            const budgetData = XLSX.utils.sheet_to_json(budgetSheet);
+                            // 存储数据到localStorage
+                            localStorage.setItem('budgetData', JSON.stringify(budgetData));
+                            alert('数据导入成功！');
+                            // 刷新当前页面
+                            const frame = document.getElementById('content-frame');
+                            frame.contentWindow.location.reload();
+                        } else {
+                            alert('未找到预算数据工作表！');
+                        }
+                    } catch (error) {
+                        console.error('数据导入错误:', error);
+                        alert('数据导入失败，请检查文件格式！');
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        });
+
+        // 导出模板
+        function exportTemplate() {
+            try {
+                // 创建工作簿
+                const wb = XLSX.utils.book_new();
+                
+                // 创建预算数据模板
+                const budgetTemplate = [{
+                    category: '住房',
+                    amount: 5000,
+                    period: '月度',
+                    startDate: '2024-01-01',
+                    note: '房租或房贷'
+                }, {
+                    category: '饮食',
+                    amount: 3000,
+                    period: '月度',
+                    startDate: '2024-01-01',
+                    note: '日常餐饮支出'
+                }];
+                
+                // 创建工作表
+                const ws = XLSX.utils.json_to_sheet(budgetTemplate);
+                
+                // 添加工作表到工作簿
+                XLSX.utils.book_append_sheet(wb, ws, '预算数据');
+                
+                // 导出Excel文件
+                XLSX.writeFile(wb, '家庭预算模板.xlsx');
+            } catch (error) {
+                console.error('模板导出错误:', error);
+                alert('模板导出失败！');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>养老规划 - 智能家庭财务规划系统</title>
+    <script src="https://gw.alipayobjects.com/os/lib/antv/g2/4.2.10/dist/g2.min.js"></script>
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.data-set-0.11.8/dist/data-set.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #34a853;
+            --warning-color: #fbbc05;
+            --danger-color: #ea4335;
+            --info-color: #46bdc6;
+            --dark-color: #202124;
+            --light-color: #f8f9fa;
+            --border-color: #dadce0;
+            --shadow-color: rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .retirement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            padding: 20px;
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .retirement-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            color: var(--dark-color);
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            margin-top: 15px;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 15px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 10px 0;
+            color: var(--primary-color);
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: var(--dark-color);
+            opacity: 0.8;
+        }
+
+        .retirement-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .retirement-table th,
+        .retirement-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .retirement-table th {
+            background-color: var(--light-color);
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: var(--light-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="retirement-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="material-icons">settings</span>
+                        养老规划设置
+                    </div>
+                </div>
+                <form class="retirement-form" id="retirement-form">
+                    <div class="form-group">
+                        <label>当前年龄</label>
+                        <input type="number" id="current-age" placeholder="输入当前年龄">
+                    </div>
+                    <div class="form-group">
+                        <label>计划退休年龄</label>
+                        <input type="number" id="retirement-age" placeholder="输入计划退休年龄">
+                    </div>
+                    <div class="form-group">
+                        <label>当前月收入(元)</label>
+                        <input type="number" id="monthly-income" placeholder="输入月收入">
+                    </div>
+                    <div class="form-group">
+                        <label>每月养老金缴纳比例(%)</label>
+                        <input type="number" id="pension-ratio" step="0.1" placeholder="输入缴纳比例">
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <span class="material-icons">save</span>
+                        保存设置
+                    </button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="material-icons">account_balance</span>
+                        养老金概览
+                    </div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">¥2,500,000</div>
+                    <div class="metric-label">预计退休金总额</div>
+                </div>
+                <div id="pension-overview" class="chart-container"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="material-icons">timeline</span>
+                    养老金积累预测
+                </div>
+            </div>
+            <div id="pension-forecast" class="chart-container"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="material-icons">pie_chart</span>
+                    养老金来源分析
+                </div>
+            </div>
+            <div id="pension-sources" class="chart-container"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="material-icons">list</span>
+                    养老规划明细
+                </div>
+            </div>
+            <table class="retirement-table">
+                <thead>
+                    <tr>
+                        <th>年份</th>
+                        <th>年龄</th>
+                        <th>工作收入</th>
+                        <th>养老金缴纳</th>
+                        <th>累计养老金</th>
+                        <th>投资收益</th>
+                        <th>总资产</th>
+                    </tr>
+                </thead>
+                <tbody id="retirement-details">
+                    <!-- 动态填充 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // 初始化图表
+        document.addEventListener('DOMContentLoaded', function() {
+            initPensionOverviewChart();
+            initPensionForecastChart();
+            initPensionSourcesChart();
+            loadRetirementDetails();
+        });
+
+        // 养老金概览图表
+        function initPensionOverviewChart() {
+            const chart = new G2.Chart({
+                container: 'pension-overview',
+                autoFit: true,
+                height: 300
+            });
+
+            const data = [
+                { type: '基本养老金', value: 1500000 },
+                { type: '企业年金', value: 500000 },
+                { type: '个人养老金', value: 300000 },
+                { type: '其他投资', value: 200000 }
+            ];
+
+            chart.data(data);
+            chart.coordinate('theta', {
+                radius: 0.75
+            });
+
+            chart.tooltip({
+                showTitle: false,
+                showMarkers: false
+            });
+
+            chart
+                .interval()
+                .position('value')
+                .color('type', ['#1a73e8', '#34a853', '#fbbc05', '#ea4335'])
+                .label('type', {
+                    content: (data) => `${data.type}\n¥${data.value.toLocaleString()}`
+                })
+                .adjust('stack');
+
+            chart.render();
+        }
+
+        // 养老金积累预测图表
+        function initPensionForecastChart() {
+            const chart = new G2.Chart({
+                container: 'pension-forecast',
+                autoFit: true,
+                height: 300
+            });
+
+            const data = generatePensionForecast();
+
+            chart.data(data);
+            chart.scale('amount', {
+                nice: true
+            });
+
+            chart.tooltip({
+                showCrosshairs: true,
+                shared: true
+            });
+
+            chart.axis('year', {
+                label: {
+                    formatter: (val) => `${val}年`
+                }
+            });
+
+            chart.axis('amount', {
+                label: {
+                    formatter: (val) => `¥${val.toLocaleString()}`
+                }
+            });
+
+            chart.area()
+                .position('year*amount')
+                .color('type')
+                .adjust('stack');
+
+            chart.line()
+                .position('year*amount')
+                .color('type')
+                .adjust('stack');
+
+            chart.render();
+        }
+
+        // 养老金来源分析图表
+        function initPensionSourcesChart() {
+            const chart = new G2.Chart({
+                container: 'pension-sources',
+                autoFit: true,
+                height: 300
+            });
+
+            const data = [
+                { source: '个人缴纳', percentage: 35 },
+                { source: '单位缴纳', percentage: 45 },
+                { source: '政府补贴', percentage: 10 },
+                { source: '投资收益', percentage: 10 }
+            ];
+
+            chart.data(data);
+
+            chart.coordinate('theta', {
+                radius: 0.75,
+                innerRadius: 0.6
+            });
+
+            chart.tooltip({
+                showTitle: false,
+                showMarkers: false
+            });
+
+            chart
+                .interval()
+                .position('percentage')
+                .color('source', ['#1a73e8', '#34a853', '#fbbc05', '#ea4335'])
+                .label('source', {
+                    content: (data) => `${data.source}\n${data.percentage}%`
+                })
+                .adjust('stack');
+
+            chart.render();
+        }
+
+        // 生成养老金预测数据
+        function generatePensionForecast() {
+            const data = [];
+            const years = 30;
+            let baseAmount = 100000;
+
+            for (let year = 1; year <= years; year++) {
+                data.push(
+                    {
+                        year: year,
+                        type: '基本养老金',
+                        amount: baseAmount * (1 + year * 0.05)
+                    },
+                    {
+                        year: year,
+                        type: '补充养老金',
+                        amount: baseAmount * (1 + year * 0.03)
+                    }
+                );
+            }
+            return data;
+        }
+
+        // 加载养老规划明细
+        function loadRetirementDetails() {
+            const tbody = document.getElementById('retirement-details');
+            const details = [
+                {
+                    year: 2024,
+                    age: 30,
+                    income: 180000,
+                    pension: 36000,
+                    accumulated: 150000,
+                    investment: 15000,
+                    total: 165000
+                },
+                {
+                    year: 2025,
+                    age: 31,
+                    income: 200000,
+                    pension: 40000,
+                    accumulated: 195000,
+                    investment:
